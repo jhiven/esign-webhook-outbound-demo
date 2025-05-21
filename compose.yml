@@ -1,0 +1,15 @@
+services:
+  app:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: ghcr.io/jhiven/esign-webhook-outbound-demo:latest
+    container_name: laravel-app
+    restart: unless-stopped
+    volumes:
+      - ./storage:/var/www/html/storage
+    ports:
+      - '8000:8000'
+
+volumes:
+  storage:
