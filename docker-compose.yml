@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./storage:/var/www/html/storage
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:SomeRandomString
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/html/database/database.sqlite
+    ports:
+      - '8000:8000'
+    depends_on:
+      - node
+
+  node:
+    image: node:20
+    container_name: node-app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: ['sh', '-c', 'npm install && npm run dev']
+    ports:
+      - '5173:5173'
+
+  # Optional: Add a service for SQLite admin if needed
+
+volumes:
+  storage:
