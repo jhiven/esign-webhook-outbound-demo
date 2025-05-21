@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\WebhookDocument;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Events\WebhookReceived;
 
 class WebhookController extends Controller
 {
@@ -14,6 +14,13 @@ class WebhookController extends Controller
      */
     public function receive(Request $request)
     {
+        // Log the incoming request for debugging
+        Log::info('Webhook received', [
+            'ip' => $request->ip(),
+            'metadata' => $request->input('metadata'),
+            'has_file' => $request->hasFile('file'),
+        ]);
+
         // Validate and process the multipart/form-data
         $file = $request->file('file'); // expects a file input named 'file'
         $metadata = $request->input('metadata'); // expects a stringified JSON
@@ -21,20 +28,21 @@ class WebhookController extends Controller
         // Decode metadata (dummy decode for now, real decode/validation later)
         $decodedMetadata = json_decode($metadata, true) ?? ['raw' => $metadata];
 
-        // Store the file if present
-        $filePath = $file ? $file->store('webhook_uploads') : null;
+        // Store the file if present (ensure it's in the public disk for download)
+        $filePath = $file ? $file->store('webhook_uploads', 'public') : null;
 
-        // Store in DB (dummy entity)
-        $webhookDocument = WebhookDocument::create([
+        WebhookDocument::create([
+            'metadata' => $decodedMetadata,
+            'file_path' => $filePath,
+        ]);
+
+        Log::info('Document stored successfully', [
             'metadata' => $decodedMetadata,
             'file_path' => $filePath,
         ]);
 
         return response()->json([
             'success' => true,
-            'id' => $webhookDocument->id,
-            'metadata' => $webhookDocument->metadata,
-            'file' => $file ? $file->getClientOriginalName() : null,
         ]);
     }
 }

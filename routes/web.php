@@ -9,7 +9,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Webhook receiver route (accepts multipart/form-data via POST)
-Route::post('/webhook/inbound', [WebhookController::class, 'receive']);
+Route::post('/webhook/inbound', [WebhookController::class, 'receive'])->withoutMiddleware(['web']);
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
